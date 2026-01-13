@@ -458,6 +458,7 @@ function DungeonGenerator:GetNextExit()
 	return possibleExits[math.random(#possibleExits)]
 end
 
+-- Destroy all generated rooms for this dungeon and delete the metatable
 function DungeonGenerator:Destroy()
 	self.GeneratedFolder:Destroy()
 	setmetatable(self, nil)
