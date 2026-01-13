@@ -94,10 +94,6 @@ function DungeonGenerator.new(dungeonType)
 	self.GeneratedFolder.Name = "GeneratedDungeon"
 	self.GeneratedFolder.Parent = workspace
 	
-	self.EnemiesFolder = Instance.new("Folder")
-	self.EnemiesFolder.Name = "Enemies"
-	self.EnemiesFolder.Parent = workspace
-	
 	return self
 end
 
@@ -313,8 +309,6 @@ function DungeonGenerator:FinalizeRoom(room)
 	
 	self.RoomCount += 1
 	self:RegisterExits(room)
-	
-	self:SpawnEnemiesInRoom(room)
 end
 
 -- Places the boss room
@@ -409,78 +403,6 @@ end
 function DungeonGenerator:CloseExit(exit)
 	-- TODO
 	exit.ExitPart.Transparency = 0.5
-end
-
--- Spawns enemies at all spawnpoints in a given room
-function DungeonGenerator:SpawnEnemiesInRoom(room: Model)
-	local spawns = room:FindFirstChild("Spawnpoints")
-	if not spawns then return end
-	
-	local spawnedEnemies = {}
-	for _, spawnPoint in ipairs(spawns:GetChildren()) do
-		-- Spawnpoint has to be a part
-		if not spawnPoint:IsA("BasePart") then continue end
-		-- Hide spawnpoint incase it's still visible
-		spawnPoint.Transparency = 1
-		
-		-- Get all enemy attributes
-		local enemyType = spawnPoint:GetAttribute("Type") or "Melee"
-		local enemy = spawnPoint:GetAttribute("Enemy")
-		local amount = spawnPoint:GetAttribute("Amount") or 1
-		local weight = spawnPoint:GetAttribute("Weight") or 1
-		if enemy == "" then
-			enemy = nil
-		end
-		
-		-- Random chance to not spawn
-		local rand = math.random()
-		if rand > weight then
-			continue
-		end
-		
-		-- Spawn the enemy
-		local newEnemy = self:SpawnEnemy(enemyType, spawnPoint.CFrame, enemy)
-		table.insert(spawnedEnemies, newEnemy)
-	end
-	
-	-- When a player enters the room, make all enemies inside active
-	local triggered = false
-	room.Generation.BoundingBox.Touched:Connect(function(prt)
-		if not triggered and game.Players:GetPlayerFromCharacter(prt.Parent) then
-			triggered = true
-			
-			for _, enemy in ipairs(spawnedEnemies) do
-				enemy:SetAttribute("Dormant", false)
-			end
-		end
-	end)
-end
-
--- Spawn a random or given enemy at a given location
-function DungeonGenerator:SpawnEnemy(enemyType, cf, enemyName)
-	-- Get folder for enemy type
-	local folder = ServerStorage.Enemies:FindFirstChild(enemyType)
-	if not folder then return end
-	
-	-- If enemyName is given, then spawn that enemy
-	-- Else, spawn a random one from the folder
-	local enemy
-	if enemyName then
-		enemy = ServerStorage.Enemies:FindFirstChild(enemyName):Clone()
-	else
-		local enemies = folder:GetChildren()
-		if #enemies == 0 then return end
-		
-		enemy = enemies[math.random(#enemies)]:Clone()
-	end
-	
-	enemy:PivotTo(cf)
-	enemy.Parent = self.EnemiesFolder
-	
-	-- Make the enemy dormant to be activated later
-	enemy:SetAttribute("Dormant", true)
-	
-	return enemy
 end
 
 -- Checks if a room can be placed in a position
