@@ -78,15 +78,15 @@ local function boxesOverlap(partA, partB, sizeCheck)
 end
 
 -- Create a new DungeonGenerator object
-function DungeonGenerator.new(dungeonType)
+function DungeonGenerator.new(data)
 	local metaTable = {
-		WorldFolder = ServerStorage.DungeonRooms[dungeonType],
+		WorldFolder = ServerStorage.DungeonRooms[data.DungeonType or "DebugDungeon"],
 		PlacedRooms = {},
 		OpenExits = {},
 		RoomCount = 0,
 		-- TODO: Replace with actual dungeon data
-		Quota = 75,
-		MaxRooms = 150,
+		Quota = data.Quota or 75,
+		MaxRooms = data.MaxRooms or 150,
 	}
 	local self = setmetatable(metaTable, DungeonGenerator)
 	
@@ -456,6 +456,11 @@ function DungeonGenerator:GetNextExit()
 	
 	-- Return a random exit from the list of possible exits
 	return possibleExits[math.random(#possibleExits)]
+end
+
+function DungeonGenerator:Destroy()
+	self.GeneratedFolder:Destroy()
+	setmetatable(self, nil)
 end
 
 return DungeonGenerator
